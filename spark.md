@@ -46,19 +46,25 @@
 
   * reduce ：通过func函数聚集RDD中的所有元素，先聚合分区内数据，在聚合分区间的数据。
 * collect  : 在驱动程序中，以数组的形式返回数据集的所有元素。
+  
   * count   ：返回RDD中元素的个数
 * first ：返回RDD的第一个元素
+  
   * take(n)：返回RDD的前n个元素数组
 * takeOrdered(n): 返回RDD排序后的前n个数据组成的数组
+  
   * aggregate : (zeroValue: U)(seqOp: (U, T) ⇒ U, combOp: (U, U) ⇒ U),aggregate函数将每个分区里面的元素通过seqOp和初始值进行聚合，然后用combine函数将每个分区的结果和初始值(zeroValue)进行combine操作。这个函数最终返回的类型不需要和RDD中元素类型一致.
 * saveAsTexFile(path): 将数据集的元素textfile的形式保存到hdfs或者其他文件系统，对于每个元素,spark将会调用toString方法，将他转换为文件的文本。
+  
   * saveAsSequenceFile(path): 数据集中的元素以Hadoop sequencefile的格式保存到指定的目录下，可以使HDFS或者其他Hadoop支持的文件系统。
 * saveAsObjectFile(path): 将数据集中的元素序列化为对象，存储到文件中。
+  
   * countByKey(): 针对（k,v)类型的RDD,返回一个（k,Int）的map,表示每一个key对应的元素个数
 * foreach(func) : 在数据集的每个元素上，运行函数func进行更新。
   
+
 **注： 一个action就是一个job,job内部并行执行，job之间是串行。**
-  
+
 * 控制算子(持久化算子)
 
   * cache()  ->优化
@@ -92,3 +98,45 @@
   ​       checkpoint使用需要设置数据存储路径，sc.setCheckpointDir(path)
 
 ![image-20210703135740191](pic/image-20210703135740191.png)
+
+### 补充部分算子
+
+* transfromation 算子
+
+  * join
+
+    * leftOuterJoin
+    * rightOuterJoin
+    * fullOuterJoin
+
+    这些join都是作用在k,v格式的RDD上，根据key值进行连接 ，比如：（k,v）join (k,w) 返回（k,(v,w)）
+
+    注意：join后的分区数与父RDD分区数多的那个相同。
+
+  * union
+
+    合并连个数据集，两个数据集的类型要一致。
+
+    返回新的RDD的分区数是合并RDD分区的总和。
+
+  * instersection
+
+    取两个数据集的交集
+
+  * subtract
+
+    取两个数据集的差集
+
+  * mapPatitions
+
+    mapPatition与map类似，单位是每个partition上的数量
+
+  * distinct
+
+    对RDD内的数据去重
+
+  * cogroup
+
+    
+
+* action算子

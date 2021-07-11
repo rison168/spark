@@ -137,6 +137,69 @@
 
   * cogroup
 
-    
+    当调用（k,v）和 (k,w)的数据上时，返回一个数据集（k, (interable<V>, Interable<w>)）。
 
 * action算子
+
+  * foreachPartition
+
+    遍历每个partition的数据
+
+  **术语解释**
+  
+  * Master (standalone模式) 资源管理的主节点 进程
+  * Cluster Manager: 在集群上获取资源的外部服务， 比如：standalone/yarn/mesos
+  * Worker(standolone模式):基于资源管理的从节点（进程），或者说是管理本机资源的进程
+  * Application : 基于spark的用户程序，包含driver程序和运行在集群 的Executor程序，即一个完整的spark应用。
+  * Dirver: 用来连接工作节点woker工作进程executor的程序
+  * Executor:是一个worker进程所管理的节点上为某个application启动一个个进程，这个进程负责运行任务，并且负责将数据存在内存或者磁盘上。每个应用之间都有各自独立的executor.
+  * Task:被发送到executor上的工作单元
+  * Job：包含很多任务task的并行计算，和action对应的算子。
+  * stage:一个job会被拆分成很多组任务，每组任务被称为stage（就像MapReduce分为MapTask和reduceTask一样）
+
+### 窄依赖和宽依赖
+
+RDD之间有一系列的依赖关系，依赖关系又分为窄依赖和宽依赖。
+
+![image-20210705085324006](pic/image-20210705085324006.png)
+
+**窄依赖**
+
+父RDD和子RDD的parttion之间的关系是一对一的，或者父RDD和子RDD的partiton的关系多对一的，不会有shuffle的产生。
+
+**宽依赖**
+
+父RDD与子RDD的partion之间是一对多，会有shuffle操作。
+
+
+
+**stage**
+
+spark任务会根据RDD之间的依赖关系，形成应该DAG有向无环图，DAG会提交给DAGScheduler,DATscheduler会把DAG划分成相互依赖的多个stage，划分stage的依据就是RDD之间的宽窄依赖，
+
+遇到宽依赖就划分stage，每个stage包含一个或多个task任务。然后将这些task以taskset的形式提交给TaskScheduler运行。
+
+stage是由一组并行的task组成。
+
+* stage切割规则
+
+  切割规则：从后往前，遇到宽依赖就切割stage
+
+  ![image-20210705091459725](pic/image-20210705091459725.png)
+
+* stage计算模式
+
+pipeline管道计算模式，pipeline只是一种计算思想、模式。
+
+![image-20210705091913803](pic/image-20210705091913803.png)
+
+注意点：
+
+1、 数据一直在管道里面什么时候会落地？
+
+* 对RDD进行持久化（cache/persist）
+* shuffle write操作
+
+2、 stage的task并行度由stage的最后一个RDD的分区数来决定。
+
+3、 如何
